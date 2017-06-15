@@ -1,0 +1,120 @@
+[Driver]
+Browser = 'Chrome'
+Extensions = ["webdiff.crx"]
+
+# Command line arguments
+# See more: https://chromium.googlesource.com/chromium/src/+/master/chrome/common/chrome_switches.cc
+# Headless: https://developers.google.com/web/updates/2017/04/headless-chrome
+CmdArgs = [
+	'--user-agent=Mozilla/5.0 (Any OS; .NET) WebDiff/0.9',
+#	'--load-extension=../ext/',
+	'--start-maximized',
+	'--no-default-browser-check',
+	'--no-first-run',
+	'--disable-add-to-shelf',
+	'--disable-background-networking',
+	'--disable-bundled-ppapi-flash',
+	'--disable-client-side-phishing-detection',
+	'--disable-component-update',
+	'--disable-default-apps',
+	'--disable-desktop-notifications',
+	'--disable-domain-reliability',
+	'--disable-translate'
+]
+
+Cookies = 'cookies.txt'
+
+# Profile preferences
+# Check more preferences here: %LOCALAPPDATA%\Google\Chrome\User Data\Default\Preferences [JSON]
+# And here: https://chromium.googlesource.com/chromium/src/+/master/chrome/common/pref_names.cc
+[Driver.ProfilePrefs]
+"autofill.enabled" = false
+"browser.enable_spellchecking" = false
+"enable_do_not_track" = true
+"net.network_prediction_options" = 2
+"profile.password_manager_enabled" = false
+"profile.default_content_setting_values.geolocation" = 2
+"profile.default_content_setting_values.media_stream_camera" = 2
+"profile.default_content_setting_values.media_stream_mic" = 2
+"profile.default_content_setting_values.plugins" = 2
+"profile.default_content_setting_values.midi_sysex" = 2
+"profile.default_content_setting_values.ppapi_broker" = 2
+"safebrowsing.extended_reporting_enabled" = false
+"search.suggest_enabled" = false
+"settings.privacy.drm_enabled" = false
+"translate.enabled" = false
+
+
+# Chrome mobile emulation
+# Read more: https://sites.google.com/a/chromium.org/chromedriver/mobile-emulation
+[Mobile]
+Enable = false
+#Device = 'Nexus 5X'
+PixelRatio = 3.0
+Width = 360
+Height = 640
+EnableTouchEvents = true
+
+
+[Window]
+Maximize = true
+Width = 1024
+Height = 768
+
+
+[Compare]
+# Use vertical scrolling for capturing full page screenshots
+VScroll = true
+
+# Color components (A,R,G,B) threshold [0,255]
+ColorThreshold = 1
+
+# One pixel isn't too much?
+PixelsThreshold = 1
+
+# Diff rectangle area with 1px width/height isn't too much?
+DiffSideThreshold = 1
+
+
+[Visual] # Visual diff settings
+Border = true
+
+BorderColor = '#7fff0000'
+BorderWidth = 3.0
+
+BorderPadding = 4
+BorderSpacing = 10
+
+FillStyle = 'OutlinedDiamond'
+FillBackColor = '#3fff0000'
+FillForeColor = '#1fff0000'
+
+OverflowFillStyle = 'DiagonalCross'
+OverflowFillBackColor = '#3f0000ff'
+OverflowFillForeColor = '#1f0000ff'
+
+
+[JavaScript]
+# Execute some JavaScript code after page load
+OnLoad = 'document.querySelectorAll(":focus").forEach(el => el.blur());'
+
+
+[WaitUntil] # Explicit wait for a certain conditions
+
+# Wait for specified time
+Elapsed = 00:00:00.020
+
+# Wait for elements in DOM with specified CSS selector
+# Exists = ".load-complete"
+# NotExists = ".page-loading"
+
+# Wait for JavaScript truthy [https://developer.mozilla.org/en-US/docs/Glossary/truthy] condition
+JsCondition = '!window.jQuery || window.jQuery.active === 0'
+
+# Wait until there are no visible elements with specified CSS selector
+NoVisibles = '.loader, .waiter'
+# AnyVisible = ".done"
+
+# Wait for specified title value. Exact match 'VALUE' or regular expression '/VALUE/i?'
+# TitleIs = '/\bexample\b/i'
+# TitleIsNot = ''

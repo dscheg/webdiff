@@ -1,0 +1,28 @@
+{
+	"manifest_version": 2,
+	"name": "WebDiff",
+	"version": "0.9",
+
+	"description": "WebDiff extension",
+	"icons": {},
+
+	"author": "Titarenko Dmitriy",
+	"background": {
+		"persistent": true,
+		"scripts": ["bg.js"]
+	},
+
+	"content_scripts": [
+	{
+		"matches": [ "*://*/*" ],
+		"js": [ "inject.js" ],
+		"css": [ "inject.css" ]
+	}],
+
+	"permissions": [
+		"tabs",
+		"webRequest",
+		"webRequestBlocking",
+		"*://*/*"
+	]
+}

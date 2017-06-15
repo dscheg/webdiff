@@ -1,0 +1,236 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
+  <title>WebDiff</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="author" content="https://github.com/dscheg/webdiff"/>
+  <meta name="robots" content="noindex,nofollow"/>
+  <style type="text/css">
+    body {
+      margin: 0;
+      font-family: Consolas, 'Courier New';
+      font-size: 12px;
+      background: #000;
+      color: #eee;
+    }
+    h1 { text-align: center; }
+    a, a:active, a:focus, a:hover {
+      color: #9cf;
+      outline: 0;
+    }
+
+    dt {
+      font-weight: bold;
+      color: #fd9;
+    }
+
+    #info {
+      display: grid;
+      grid-gap: 10px;
+      align-items: center;
+    }
+    #info-props {
+      grid-row: 1;
+      margin: 20px 4px;
+    }
+    #info-counts {
+      grid-row: 1;
+      line-height: 1;
+      font-size: 500%;
+      text-align: right;
+      padding-right: 50px;
+      user-select: none;
+      color: #555;
+    }
+    #info-totalCount {
+      cursor: pointer;
+    }
+
+    #by {
+      text-align: right;
+      margin-right: 4px;
+    }
+    #by a {
+      text-decoration: none;
+      color: #eee;
+    }
+
+    #tdiff {
+      width: 100%;
+      border-collapse: collapse;
+      border-spacing: 10px;
+      table-layout: fixed;
+    }
+    #tdiff th {
+      font-size: 125%;
+      font-weight: normal;
+      padding-bottom: 20px;
+      color: #fd9;
+    }
+    #tdiff td {
+      border: 1px solid #773;
+      border-top: 2px solid #995;
+      border-bottom: 2px solid #995;
+      padding: 5px;
+      vertical-align: top;
+      word-break: break-all;
+    }
+    #tdiff td:first-child { border-left: none; }
+    #tdiff td:last-child { border-right: none; }
+
+    .tdiff-c { text-align: center; }
+    .tdiff-c1 {
+      width: 33%;
+      text-align:right;
+    }
+    .tdiff-c2 {
+      width: 33%;
+      text-align: center;
+      vertical-align: middle !important;
+    }
+    .tdiff-c3 {
+      width: 33%;
+      text-align: left;
+    }
+
+    .tdiff-h { cursor: pointer; }
+    .tdiff-h.diff, .tdiff-f.diff { background-color: #422; }
+    .tdiff-h.same {
+       background-color: #131;
+       display: none;
+     }
+    .tdiff-f.diff {}
+    .tdiff-f.same { display: none; }
+
+    img {
+      border: 1px dotted #aaa;
+      width: 100%;
+    }
+    .zoom {
+      display: inline-block;
+      position: relative;
+    }
+
+    .http {
+      display: none;
+      white-space: pre-wrap;
+    }
+    .http-header-name {
+      font-weight: bold;
+      color: #fd9;
+    }
+    .http-status { font-weight: bold; }
+
+    .alert { color:#f77; }
+    .ok { color:#8d6; }
+  </style>
+</head>
+<body>
+<script id="template" type="text/template">
+  <h1>Compare result</h1>
+  <div id="info">
+    <dl id="info-props">
+      <dt>Started:</dt><dd>{{started}}</dd>
+      <dt>Ended:</dt><dd>{{ended}}</dd>
+      <dt>Elapsed:</dt><dd>{{elapsed}}</dd>
+      <dt>Profile:</dt><dd>{{profile}}</dd>
+    </dl>
+
+    <div id="info-counts">
+      <span class="alert">{{diffCount}}</span>/<span id="info-totalCount">{{totalCount}}</span>
+    </div>
+  </div>
+
+  <table id="tdiff">
+    <colgroup>
+      <col class="tdiff-col1"/>
+      <col class="tdiff-col2"/>
+      <col class="tdiff-col3"/>
+    </colgroup>
+
+    <thead>
+      <tr>
+        <th><a href="{{leftBase}}" target="_blank" rel="noopener noreferrer">{{leftBase}}</a></th>
+        <th></th>
+        <th><a href="{{rightBase}}" target="_blank" rel="noopener noreferrer">{{rightBase}}</a></th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+{{#diffs}}
+      <tr class="tdiff-h {{clss}}">
+        <td class="tdiff-c1">
+          <a href="{{left.url}}" target="_blank" rel="noopener noreferrer">{{relative}}</a>
+          <div class="http">
+<span class="http-status {{left.statusClss}}">{{left.response.statusLine}}</span>
+<!--NOTE about white-space:pre-wrap-->
+{{#left.response.responseHeaders}}
+<span class="http-header-name">{{name}}</span>: {{value}}
+{{/left.response.responseHeaders}}</div>
+        </td>
+        <td class="tdiff-c2">Match {{match}}%</td>
+        <td class="tdiff-c3">
+          <a href="{{right.url}}" target="_blank" rel="noopener noreferrer">{{relative}}</a>
+          <div class="http">
+<span class="http-status {{right.statusClss}}">{{right.response.statusLine}}</span>
+<!--NOTE about white-space:pre-wrap-->
+{{#right.response.responseHeaders}}
+<span class="http-header-name">{{name}}</span>: {{value}}
+{{/right.response.responseHeaders}}</div>
+        </td>
+      </tr>
+      <tr class="tdiff-f {{clss}}">
+        <td class="tdiff-c1"><span class="zoom"><img src="{{left.img.src}}"/></span></td>
+        <td class="tdiff-c2"><span class="zoom"><img src="{{diffImg.src}}"/></span></td>
+        <td class="tdiff-c3"><span class="zoom"><img src="{{right.img.src}}"/></span></td>
+      </tr>
+{{/diffs}}
+
+    </tbody>
+  </table>
+
+  <p id="by">by <a href="https://github.com/dscheg/webdiff" rel="noopener noreferrer">WebDiff</a></p>
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js" crossorigin="anonymous" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mustache.js/2.3.0/mustache.min.js" crossorigin="anonymous" integrity="sha256-iaqfO5ue0VbSGcEiQn+OeXxnxAMK2+QgHXIDA5bWtGI="></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-zoom/1.7.20/jquery.zoom.min.js" crossorigin="anonymous" integrity="sha256-+kAcWA0klKCshjLIEEFOV51LntaiEdbldotJbI99Bh0="></script>
+<script>
+  function render(json) {
+    function setStatusClass(item) {
+      item.statusClss = item.response && item.response.statusCode >= 400 ? "alert" : "";
+    }
+
+    for(var diff of json.diffs) {
+      diff.clss = diff.areSame ? "same" : "diff";
+      setStatusClass(diff.left);
+      setStatusClass(diff.right);
+      diff.match = (100.0 * diff.match).toFixed(1);
+    }
+
+    var template = $("#template").html();
+    var html = Mustache.to_html(template, json);
+    $("body").html(html);
+
+    $("a").click((e) => {
+      e.stopImmediatePropagation();
+    });
+
+    $(".tdiff-h").click(function() {
+      $(this).find(".http").toggle();
+    });
+
+    $("#info-totalCount").click(() => $(".tdiff-h.same").toggle());
+    if($(".tdiff-h.diff").length === 0)
+      $(".tdiff-h.same").show()
+
+    $(".zoom").zoom();
+  }
+</script>
+<script src="results.js"></script>
+
+</body>
+</html>

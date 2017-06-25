@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 using OpenQA.Selenium.Edge;
@@ -50,7 +51,7 @@ namespace webdiff.driver
 			if(settings.CmdArgs != null)
 				options.AddArguments(settings.CmdArgs);
 			if(settings.Extensions != null)
-				options.AddExtensions(settings.Extensions);
+				options.AddExtensions(settings.Extensions.Select(ext => ext.RelativeToBaseDirectory()));
 			settings.ProfilePrefs?.ForEach(pref => options.AddUserProfilePreference(pref.Key, pref.Value));
 			if(mobile != null && mobile.Enable)
 			{
@@ -76,7 +77,7 @@ namespace webdiff.driver
 			var profile = new FirefoxProfile(null, true);
 			if(!string.IsNullOrEmpty(settings.Proxy))
 				profile.SetProxyPreferences(new Proxy {HttpProxy = settings.Proxy});
-			settings.Extensions?.ForEach(ext => profile.AddExtension(ext));
+			settings.Extensions?.ForEach(ext => profile.AddExtension(ext.RelativeToBaseDirectory()));
 			var options = new FirefoxOptions {Profile = profile, UseLegacyImplementation = false};
 			settings.Capabilities?.ForEach(cap => options.AddAdditionalCapability(cap.Key, cap.Value));
 			if(!string.IsNullOrEmpty(settings.BrowserBinaryPath))

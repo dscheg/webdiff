@@ -11,14 +11,22 @@ if not exist %msbuild% (
 	goto:eof
 )
 
-if not exist "nuget.exe" (
+mkdir tools 2>nul
+
+if not exist "tools\nuget.exe" (
 	echo Downloading nuget.exe...
-	powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile nuget.exe"
+	powershell -Command "Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile tools\nuget.exe"
 )
 
-nuget restore src\webdiff.csproj -SolutionDirectory src
+tools\nuget restore src\webdiff.csproj -SolutionDirectory src
+tools\nuget install ILRepack -Version 2.0.13 -OutputDirectory tools
 
 %msbuild% src\webdiff.csproj /p:Configuration=Release /p:AllowedReferenceRelatedFileExtensions=none
+
+tools\ILRepack.2.0.13\tools\ILRepack /wildcards /lib:bin\ /out:bin\webdiff.exe bin\webdiff.exe bin\*.dll
+del bin\*.dll
+del bin\*.pdb
+del bin\*.xml 2>nul
 
 xcopy /d /y cfg\profile.toml bin\
 xcopy /d /y cfg\template.html bin\
@@ -26,15 +34,16 @@ xcopy /d /y cfg\cookies.txt bin\
 
 xcopy /d /y ext\bin\webdiff.crx bin\
 
-if not exist "bin\chromedriver_win32.zip" (
+if not exist "bin\chromedriver.exe" (
 	echo Downloading chromedriver...
 	powershell -Command "Invoke-WebRequest https://chromedriver.storage.googleapis.com/2.30/chromedriver_win32.zip -OutFile bin/chromedriver_win32.zip"
-)
 
-if not exist "bin\chromedriver.exe" (
 	echo Unzipping chromedriver...
 	powershell -Command "Expand-Archive bin/chromedriver_win32.zip -DestinationPath bin"
 )
 
-echo Done! Check bin directory!
-echo Try: echo /^|webdiff https://example.com/prod https://example.com/test
+del bin\chromedriver_win32.zip 2>nul
+
+echo ==========================
+echo Done! Try it:
+echo echo .^|bin\webdiff https://github.com/dscheg/webdiff/tree/9f540f30aa69408485577590b9441211c8b202d1/ https://github.com/dscheg/webdiff/tree/a46231736f67a60538a59dd4c252f8f6be2d9bf7/

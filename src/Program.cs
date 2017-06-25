@@ -192,7 +192,7 @@ namespace webdiff
 				results.Ended = DateTime.Now;
 				results.Elapsed = results.Ended - results.Started;
 
-				File.Copy(template, Path.Combine(ResultsPath, HtmlReportFilename));
+				File.Copy(template.RelativeToBaseDirectory(), Path.Combine(ResultsPath, HtmlReportFilename));
 				File.WriteAllText(Path.Combine(ResultsPath, JsResultsFilename), $"{JsRenderFunctionName}({JsonConvert.SerializeObject(results, Formatting.Indented, new SizeConverter(), new RectangleConverter())});{Environment.NewLine}");
 
 				Console.WriteLine();

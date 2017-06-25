@@ -11,7 +11,7 @@ namespace webdiff
 	{
 		public static Settings Read(string filename)
 		{
-			var config = TomlConfig.Create(cfg => cfg.ConfigureType<Color>(type => type.WithConversionFor<TomlString>(convert => convert.FromToml(val => ColorHelper.Parse(val.Value)))));
+			var config = TomlSettings.Create(cfg => cfg.ConfigureType<Color>(type => type.WithConversionFor<TomlString>(convert => convert.FromToml(val => ColorHelper.Parse(val.Value)))));
 			return filename == null ? new Settings() : Toml.ReadFile<Settings>(filename, config);
 		}
 

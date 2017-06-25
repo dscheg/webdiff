@@ -7,7 +7,8 @@ Extensions = ["webdiff.crx"]
 # Headless: https://developers.google.com/web/updates/2017/04/headless-chrome
 CmdArgs = [
 	'--user-agent=Mozilla/5.0 (Any OS; .NET) WebDiff/0.9',
-#	'--load-extension=../ext/',
+#	'--headless',
+#	'--load-extension=<Unpacked_Extension_Full_Path>',
 	'--start-maximized',
 	'--no-default-browser-check',
 	'--no-first-run',

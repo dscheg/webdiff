@@ -11,21 +11,20 @@ WebDiff is a configurable .NET command-line tool for comparing two sites by list
 * Cookies
 * HTML report with compare results
 
-### Get
+![png](img/example.png)
+
+### Build
+Requirements:
+* Visual Studio 2017
+* PowerShell v5+
+
 ```
 git clone https://github.com/dscheg/webdiff
 cd webdiff
 build.bat
 ```
-or
-1. Use IDE to build `*.sln`
-2. Copy `cfg\*` to `bin\`
-3. Copy `ext\bin\webdiff.crx` to `bin\`
-4. Download and unzip [ChromeDriver](https://chromedriver.storage.googleapis.com/2.30/chromedriver_win32.zip) to `bin\`
-  ...
-5. Configure your `profile.toml` and enjoy
 
-### Run
+### Usage
 ```
 Usage: webdiff [OPTIONS] URL1 URL2 [FILE]
 Options:
@@ -40,4 +39,4 @@ Options:
 Examples:
   webdiff http://prod.example.com http://test.example.com < URLs.txt
   webdiff -p profile.toml -t template.html -o data http://prod.example.com http://test.example.com URLs.txt
-  ```
+```

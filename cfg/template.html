@@ -130,7 +130,7 @@
 </head>
 <body>
 <script id="template" type="text/template">
-  <h1>Compare result</h1>
+  <h1>Diff results</h1>
   <div id="info">
     <dl id="info-props">
       <dt>Started:</dt><dd>{{started}}</dd>
@@ -205,15 +205,15 @@
       item.statusClss = item.response && item.response.statusCode >= 400 ? "alert" : "";
     }
 
-    for(var diff of json.diffs) {
+    for(let diff of json.diffs) {
       diff.clss = diff.areSame ? "same" : "diff";
       setStatusClass(diff.left);
       setStatusClass(diff.right);
       diff.match = (100.0 * diff.match).toFixed(1);
     }
 
-    var template = $("#template").html();
-    var html = Mustache.to_html(template, json);
+    let template = $("#template").html();
+    let html = Mustache.to_html(template, json);
     $("body").html(html);
 
     $("a").click((e) => {
@@ -229,6 +229,16 @@
       $(".tdiff-h.same").show()
 
     $(".zoom").zoom();
+
+    $(document).on("mouseenter mouseleave mousemove", ".zoomImg", function(e) {
+      let x = $(this).prev().offset().left;
+      $(this).closest("tr").find(".zoomImg").not(this).each(function() {
+        let e2 = $.Event(e.type + ".zoom"), item = $(this);
+        e2.pageX = e.pageX + item.prev().offset().left - x;
+        e2.pageY = e.pageY;
+        item.trigger(e2)
+      });
+    });
   }
 </script>
 <script src="results.js"></script>

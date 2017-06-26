@@ -9,7 +9,7 @@ WebDiff is a configurable .NET command-line tool for comparing two sites by list
 * Injecting CSS/JS [WebExtension]
 * Modifying HTTP-headers [WebExtension]
 * Cookies
-* HTML report with compare results
+* HTML report with diff results
 
 ![png](img/example.png)
 

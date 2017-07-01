@@ -112,6 +112,7 @@
     .zoom {
       display: inline-block;
       position: relative;
+      cursor: zoom-in;
     }
 
     .http {
@@ -201,7 +202,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-zoom/1.7.20/jquery.zoom.min.js" crossorigin="anonymous" integrity="sha256-+kAcWA0klKCshjLIEEFOV51LntaiEdbldotJbI99Bh0="></script>
 <script>
   function render(json) {
-    function setStatusClass(item) {
+    let setStatusClass = function(item) {
       item.statusClss = item.response && item.response.statusCode >= 400 ? "alert" : "";
     }
 
@@ -216,9 +217,7 @@
     let html = Mustache.to_html(template, json);
     $("body").html(html);
 
-    $("a").click((e) => {
-      e.stopImmediatePropagation();
-    });
+    $("a").click(e => e.stopImmediatePropagation());
 
     $(".tdiff-h").click(function() {
       $(this).find(".http").toggle();
@@ -228,17 +227,30 @@
     if($(".tdiff-h.diff").length === 0)
       $(".tdiff-h.same").show()
 
-    $(".zoom").zoom();
-
-    $(document).on("mouseenter mouseleave mousemove", ".zoomImg", function(e) {
+    //NOTE: zoom({on:"grab"}) on 3 images in row
+    let zoom3 = function(e) {
       let x = $(this).prev().offset().left;
-      $(this).closest("tr").find(".zoomImg").not(this).each(function() {
-        let e2 = $.Event(e.type + ".zoom"), item = $(this);
-        e2.pageX = e.pageX + item.prev().offset().left - x;
+      let type = e.type === "mousedown" ? "mouseenter" : e.type === "mouseup" ? "mouseleave" : e.type;
+      $(this).closest("tr").find(".zoomImg").each(function() {
+        let e2 = $.Event(type + ".zoom"), $item = $(this);
+        e2.which = e.which;
+        e2.pageX = e.pageX + $item.prev().offset().left - x;
         e2.pageY = e.pageY;
-        item.trigger(e2)
+        $item.trigger(e2)
       });
+    }
+    $(".zoom").on("mouseenter mouseleave", e => e.stopImmediatePropagation());
+    $(document).on("mousedown mousemove", ".zoomImg", function(e) {
+      if(e.isTrigger || e.which !== 1) return;
+      e.preventDefault();
+      if(e.type === "mousedown") {
+        $(this).addClass("active");
+        $(document).one("mouseup", e => zoom3.call($(".zoomImg.active").removeClass("active").get(), e));
+      }
+      zoom3.call(this, e);
     });
+
+    $(".zoom").zoom();
   }
 </script>
 <script src="results.js"></script>

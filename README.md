@@ -40,3 +40,8 @@ Examples:
   webdiff http://prod.example.com http://test.example.com < URLs.txt
   webdiff -p profile.toml -t template.html -o data http://prod.example.com http://test.example.com URLs.txt
 ```
+
+### Config
+* profile.toml
+* cookies.txt
+* ext/inject.{js|css}

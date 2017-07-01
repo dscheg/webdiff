@@ -1,6 +1,6 @@
 [Driver]
 Browser = 'Chrome'
-Extensions = ["webdiff.crx"]
+Extensions = ['webdiff.crx']
 
 # Command line arguments
 # See more: https://chromium.googlesource.com/chromium/src/+/master/chrome/common/chrome_switches.cc
@@ -101,20 +101,19 @@ OnLoad = 'document.querySelectorAll(":focus").forEach(el => el.blur());'
 
 
 [WaitUntil] # Explicit wait for a certain conditions
-
 # Wait for specified time
 Elapsed = 00:00:00.020
 
 # Wait for elements in DOM with specified CSS selector
-# Exists = ".load-complete"
-# NotExists = ".page-loading"
+# Exists = '.load-complete'
+# NotExists = '.page-loading'
 
 # Wait for JavaScript truthy [https://developer.mozilla.org/en-US/docs/Glossary/truthy] condition
 JsCondition = '!window.jQuery || window.jQuery.active === 0'
 
 # Wait until there are no visible elements with specified CSS selector
 NoVisibles = '.loader, .waiter'
-# AnyVisible = ".done"
+# AnyVisible = '.done'
 
 # Wait for specified title value. Exact match 'VALUE' or regular expression '/VALUE/i?'
 # TitleIs = '/\bexample\b/i'

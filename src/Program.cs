@@ -222,13 +222,13 @@ namespace webdiff
 			{
 				var (baseUri, driver) = item;
 
-				if(settings.Script.OnLoad != null)
-					driver.ExecuteScript(settings.Script.OnLoad);
-
 				if(isScript)
 					driver.ExecuteScript(relative);
 				else
 					driver.Navigate().GoToUrl(new Uri(baseUri, relative));
+
+				if(settings.Script.OnLoad != null)
+					driver.ExecuteScript(settings.Script.OnLoad);
 
 				driver.Wait(settings.WaitUntil);
 

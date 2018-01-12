@@ -19,11 +19,11 @@ if not exist "tools\nuget.exe" (
 )
 
 tools\nuget restore src\webdiff.csproj -SolutionDirectory src
-tools\nuget install ILRepack -Version 2.0.13 -OutputDirectory tools
+tools\nuget install ILRepack -Version 2.0.15 -OutputDirectory tools
 
 %msbuild% src\webdiff.csproj /p:Configuration=Release /p:AllowedReferenceRelatedFileExtensions=none
 
-tools\ILRepack.2.0.13\tools\ILRepack /wildcards /lib:bin\ /out:bin\webdiff.exe bin\webdiff.exe bin\*.dll
+tools\ILRepack.2.0.15\tools\ILRepack /wildcards /lib:bin\ /out:bin\webdiff.exe bin\webdiff.exe bin\*.dll
 del bin\*.dll
 del bin\*.pdb
 del bin\*.xml 2>nul
@@ -36,7 +36,7 @@ xcopy /d /y ext\bin\webdiff.crx bin\
 
 if not exist "bin\chromedriver.exe" (
 	echo Downloading chromedriver...
-	powershell -Command "Invoke-WebRequest https://chromedriver.storage.googleapis.com/2.30/chromedriver_win32.zip -OutFile bin/chromedriver_win32.zip"
+	powershell -Command "Invoke-WebRequest https://chromedriver.storage.googleapis.com/2.35/chromedriver_win32.zip -OutFile bin/chromedriver_win32.zip"
 
 	echo Unzipping chromedriver...
 	powershell -Command "Expand-Archive bin/chromedriver_win32.zip -DestinationPath bin"

@@ -95,7 +95,7 @@ OverflowFillBackColor = '#3f0000ff'
 OverflowFillForeColor = '#1f0000ff'
 
 
-[JavaScript]
+[Script]
 # Execute some JavaScript code after page load
 OnLoad = 'document.querySelectorAll(":focus").forEach(el => el.blur());'
 

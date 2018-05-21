@@ -21,9 +21,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="NDesk.Options" Version="0.2.1" />
-		<PackageReference Include="Nett" Version="0.8.0" />
-		<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-		<PackageReference Include="Selenium.WebDriver" Version="3.8.0" />
-		<PackageReference Include="Selenium.Support" Version="3.8.0" />
+		<PackageReference Include="Nett" Version="0.9.0" />
+		<PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+		<PackageReference Include="Selenium.WebDriver" Version="3.12.0" />
+		<PackageReference Include="Selenium.Support" Version="3.12.0" />
 	</ItemGroup>
 </Project>

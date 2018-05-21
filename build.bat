@@ -36,7 +36,7 @@ xcopy /d /y ext\bin\webdiff.crx bin\
 
 if not exist "bin\chromedriver.exe" (
 	echo Downloading chromedriver...
-	powershell -Command "Invoke-WebRequest https://chromedriver.storage.googleapis.com/2.35/chromedriver_win32.zip -OutFile bin/chromedriver_win32.zip"
+	powershell -Command "Invoke-WebRequest https://chromedriver.storage.googleapis.com/2.38/chromedriver_win32.zip -OutFile bin/chromedriver_win32.zip"
 
 	echo Unzipping chromedriver...
 	powershell -Command "Expand-Archive bin/chromedriver_win32.zip -DestinationPath bin"

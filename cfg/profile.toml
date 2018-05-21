@@ -102,7 +102,7 @@ OnLoad = 'document.querySelectorAll(":focus").forEach(el => el.blur());'
 
 [WaitUntil] # Explicit wait for a certain conditions
 # Wait for specified time
-Elapsed = 00:00:00.020
+Elapsed = 20ms
 
 # Wait for elements in DOM with specified CSS selector
 # Exists = '.load-complete'

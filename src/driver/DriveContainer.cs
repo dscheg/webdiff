@@ -25,8 +25,7 @@ namespace webdiff.driver
 			{
 				driver = Startup.StartNewDriver(settings.Driver, settings.Mobile).SetWindowSettings(settings.Window);
 				Console.Error.WriteLine("Started driver, {0}", driver.Capabilities);
-				if (baseUri != null)
-					driver.Url = baseUri.ToString();
+				driver.Url = baseUri.ToString();
 			}
 			catch(Exception e)
 			{

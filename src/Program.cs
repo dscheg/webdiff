@@ -7,9 +7,7 @@ using System.Linq;
 using System.Net;
 using NDesk.Options;
 using Newtonsoft.Json;
-using OpenQA.Selenium.Remote;
 using webdiff.driver;
-using webdiff.http;
 using webdiff.img;
 using webdiff.utils;
 using Cookie = OpenQA.Selenium.Cookie;
@@ -33,12 +31,14 @@ namespace webdiff
 			var profile = "profile.toml";
 			var template = "template.html";
 			var showHelpAndExit = false;
+			var useAbsoluteLinks = false;
 
 			var options = new OptionSet
 			{
 				{"o|output=", $"Reports output directory\n(default: '{output}')", v => output = v},
 				{"p|profile=", $"Profile TOML file with current settings\n(default: '{profile}')", v => profile = v},
 				{"t|template=", $"HTML report template file\n(default: '{template}')", v => template = v},
+				{"l|full-links", "Use absolute links instead of relative", v => useAbsoluteLinks = v != null},
 				{"h|help", "Show this message", v => showHelpAndExit = v != null}
 			};
 
@@ -80,22 +80,28 @@ namespace webdiff
 				error = Error.InvalidArgs;
 			}
 
-			try
+
+			Uri svcLeft = null;
+			Uri svcRight = null;
+			if (!useAbsoluteLinks)
 			{
-				if(free?.Count >= 2)
+				try
 				{
-					SvcLeft = new Uri(free[0]);
-					SvcRight = new Uri(free[1]);
+					if (free?.Count >= 2)
+					{
+						svcLeft = new Uri(free[0]);
+						svcRight = new Uri(free[1]);
+					}
+				}
+				catch (Exception e)
+				{
+					Console.Error.WriteLine(e.Message);
+					Console.Error.WriteLine();
+					error = Error.InvalidArgs;
 				}
 			}
-			catch(Exception e)
-			{
-				Console.Error.WriteLine(e.Message);
-				Console.Error.WriteLine();
-				error = Error.InvalidArgs;
-			}
 
-			var input = free?.Skip(2).FirstOrDefault();
+			var input = free?.Skip(useAbsoluteLinks ? 0 : 2).FirstOrDefault();
 			if(input != null && !File.Exists(input.RelativeToBaseDirectory()))
 			{
 				Console.Error.WriteLine("Input file with URLs not found");
@@ -103,9 +109,10 @@ namespace webdiff
 				error = Error.InvalidArgs;
 			}
 
-			if(showHelpAndExit || error != 0 || settings == null || free == null || free.Count < 2)
+			if(showHelpAndExit || error != 0 || settings == null || free == null)
 			{
 				Console.WriteLine("Usage: webdiff [OPTIONS] URL1 URL2 [FILE]");
+				Console.WriteLine("Usage: webdiff -l [OPTIONS] [FILE]");
 				Console.WriteLine("Options:");
 				options.WriteOptionDescriptions(Console.Out);
 				Console.WriteLine();
@@ -144,39 +151,31 @@ namespace webdiff
 				return (int)Error.CestLaVie;
 			}
 
-			(Uri BaseUri, RemoteWebDriver Driver)[] drivers = null;
+			DriveContainer[] drivers = null;
 
 			try
 			{
-				drivers = new[] {SvcLeft, SvcRight}
-					.AsParallel().AsOrdered()
-					.Select(uri =>
-					{
-						RemoteWebDriver driver = null;
-						try
-						{
-							driver = Startup.StartNewDriver(settings.Driver, settings.Mobile).SetWindowSettings(settings.Window);
-							Console.Error.WriteLine("Started driver, {0}", driver.Capabilities);
-							driver.Url = uri.ToString();
-						}
-						catch(Exception e)
-						{
-							Console.Error.WriteLine($"Failed to start driver: {e.Message}");
-						}
-						return (uri, driver);
-					})
-					.ToArray();
+				if (useAbsoluteLinks)
+					drivers = Enumerable.Range(0, 2)
+						.AsParallel().AsOrdered()
+						.Select(_ => DriveContainer.Create(settings))
+						.ToArray();
+				else
+					drivers = new[] {svcLeft, svcRight}
+						.AsParallel().AsOrdered()
+						.Select(uri => DriveContainer.Create(settings, uri))
+						.ToArray();
 
-				if(drivers.Any(driver => driver.Driver == null))
+				if(drivers.Any(driver => !driver.IsInitialized))
 					return (int)Error.CestLaVie;
 
-				cookies?.ForEach(cookie => drivers.Select(item => item.Driver).ForEach(driver => driver.Manage().Cookies.AddCookie(cookie)));
+				drivers.ForEach(driver => driver.Cookies = cookies);
 
 				var results = new Results
 				{
 					Started = started,
-					LeftBase = SvcLeft,
-					RightBase = SvcRight,
+					LeftBase = svcLeft,
+					RightBase = svcRight,
 					Profile = profile,
 					Diffs = new List<Diff>()
 				};
@@ -186,7 +185,7 @@ namespace webdiff
 					.Select(line => line.Trim())
 					.Where(line => line != string.Empty)
 					.Where(line => !line.StartsWith("#", StringComparison.Ordinal))
-					.Select((line, idx) => Cmp(settings, drivers, line, idx, results))
+					.Select((line, idx) => Cmp(settings, drivers, line, idx, results, useAbsoluteLinks))
 					.Count(res => !res);
 
 				results.Ended = DateTime.Now;
@@ -209,33 +208,26 @@ namespace webdiff
 			}
 			finally
 			{
-				drivers.AsParallel().ForAll(driver => driver.Driver?.Dispose());
+				drivers.AsParallel().ForAll(driver => driver?.Dispose());
 			}
 		}
 
 		//TODO: Errors handling and refactoring
-		private static bool Cmp(Settings settings, (Uri BaseUri, RemoteWebDriver Driver)[] items, string relative, int idx, Results results)
+		private static bool Cmp(Settings settings, DriveContainer[] drivers, string test, int idx, Results results, bool useAbsoluteLinks)
 		{
-			var isScript = StringUtils.RemovePrefix(ref relative, "EXEC ");
+			var isScript = StringUtils.RemovePrefix(ref test, "EXEC ");
 
-			var pages = items.AsParallel().AsOrdered().Select(item =>
-			{
-				var (baseUri, driver) = item;
+			var urls = !isScript && useAbsoluteLinks
+				? test.Split(new []{'\t'}, 2)
+				: Enumerable.Repeat(test, 2);
 
-				if(isScript)
-					driver.ExecuteScript(relative);
-				else
-					driver.Navigate().GoToUrl(new Uri(baseUri, relative));
+			var pages = drivers.Zip(urls, (driver, url) => (driver, url))
+				.AsParallel().AsOrdered()
+				.Select(tuple => tuple.driver.ProcessRequest(tuple.url, isScript))
+				.ToArray();
 
-				if(settings.Script.OnLoad != null)
-					driver.ExecuteScript(settings.Script.OnLoad);
-
-				driver.Wait(settings.WaitUntil);
-
-				return (Http:driver.GetHttpResponse(), Bmp:driver.GetVertScrollScreenshot(settings));
-			}).ToArray();
-
-			(HttpResponse Http, Bitmap Bmp) pageLeft = pages[0], pageRight = pages[1];
+			var pageLeft = pages[0];
+			var pageRight = pages[1];
 			Bitmap imgLeft = pageLeft.Bmp, imgRight = pageRight.Bmp, diff;
 
 			int pixels;
@@ -244,12 +236,12 @@ namespace webdiff
 
 			var match = 1.0 - (double)pixels / diff.Width / diff.Height;
 
-			WriteResult(areSame, areSame ? "Same: " : "Diff: ", relative);
+			WriteResult(areSame, areSame ? "Same: " : "Diff: ", test);
 			WriteInfo($"      Match {match:P1} ({pixels} / {diff.Width * diff.Height} pixels)");
 
 			string leftName = null, rightName = null, diffName = null;
 
-			var name = $"{idx:0000}-" + relative.Trim('/').ToSafeFilename();
+			var name = $"{idx:0000}-" + (useAbsoluteLinks ? "different" : test.Trim('/').ToSafeFilename());
 			if(!areSame)
 			{
 				leftName = name + "-left.png";
@@ -268,14 +260,14 @@ namespace webdiff
 
 			results.Diffs.Add(new Diff
 			{
-				Relative = relative,
+				Relative = useAbsoluteLinks ? "different" : test,
 				AreSame = areSame,
 				UnmatchedPixels = result.Unmatched,
 				TotalPixels = diff.Width * diff.Height,
 				Match = match,
 				Left = new Page
 				{
-					Url = isScript ? null : new Uri(SvcLeft, relative),
+					Url = pageLeft.RequestUri,
 					Response = pageLeft.Http,
 					Img = new Img
 					{
@@ -286,7 +278,7 @@ namespace webdiff
 				},
 				Right = new Page
 				{
-					Url = isScript ? null : new Uri(SvcRight, relative),
+					Url = pageRight.RequestUri,
 					Response = pageRight.Http,
 					Img = new Img
 					{
@@ -333,9 +325,6 @@ namespace webdiff
 		private const string HtmlReportFilename = "index.html";
 		private const string JsRenderFunctionName = "render";
 		private const string JsResultsFilename = "results.js";
-
-		private static Uri SvcLeft;
-		private static Uri SvcRight;
 
 		private static string ResultsPath;
 		private static string ResultsImgPath;
